@@ -77,6 +77,11 @@ Para sincronizar com GitHub:
 git push origin main --tags
 ```
 
+### Auto envio para GitHub
+- O repositório está configurado com hook `post-commit` em `.githooks/post-commit`.
+- A cada commit, ele tenta enviar automaticamente para `origin/<branch atual>`.
+- Se estiver sem internet ou sem credencial, o commit continua normal e o hook só registra aviso.
+
 ## Estrutura de docs de direcionamento
 - `docs/comercial/01_design_produto.md`
 - `docs/comercial/02_roadmap_90_dias.md`

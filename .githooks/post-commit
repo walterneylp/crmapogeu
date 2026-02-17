@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -u
+
+# Auto-push after every commit. Non-blocking: failures won't cancel commit.
+branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)"
+
+if git remote get-url origin >/dev/null 2>&1; then
+  git push origin "$branch" >/dev/null 2>&1 || {
+    echo "[auto-push] Falhou ao enviar para origin/$branch (sem rede ou sem credencial)."
+  }
+else
+  echo "[auto-push] Remote origin nao configurado."
+fi
+
+exit 0

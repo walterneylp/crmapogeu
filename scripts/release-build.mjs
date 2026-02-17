@@ -108,7 +108,11 @@ function main() {
   pruneBuildTags();
 
   console.log(`Build concluida: ${fullVersion}`);
-  console.log('Se o remoto estiver configurado, execute: git push origin main --tags');
+  try {
+    runInherit('git push origin main --tags');
+  } catch {
+    console.log('Nao foi possivel enviar para o remoto automaticamente (sem rede/credencial).');
+  }
 }
 
 main();
