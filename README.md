@@ -57,6 +57,26 @@ VITE_SUPABASE_ANON_KEY=...
 npm run dev
 ```
 
+## Versionamento e compilacao
+- O menu lateral mostra versao e build (ex.: `1.0.124-17.02.2026-12.06.28`).
+- A cada compilacao versionada, execute:
+```bash
+npm run release:build
+```
+- Esse comando faz:
+1. Incrementa build em `.build-meta.json`
+2. Atualiza `src/buildInfo.ts` (versao/data exibidas no sistema)
+3. Atualiza `package.json` para `major.minor.build`
+4. Roda lint + build
+5. Cria commit `build: <versao>`
+6. Cria tag `build/v<major.minor.build>`
+7. Mantem apenas as 20 tags de build mais recentes
+
+Para sincronizar com GitHub:
+```bash
+git push origin main --tags
+```
+
 ## Estrutura de docs de direcionamento
 - `docs/comercial/01_design_produto.md`
 - `docs/comercial/02_roadmap_90_dias.md`
