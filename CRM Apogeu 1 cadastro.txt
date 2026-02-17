@@ -1,0 +1,21 @@
+CRM - Apogeu
+------------
+1. cadastro de usuários
+2. cada opração realizada tem que ficar registrado para auditoria
+3. cadastro de produtos (treinamentos, consultoria, hora técnica, mentoria, perícia, etc)
+4. orçamentos (aqui vai definir alguns parâmetros e vincular a modelos de orçamentos pré definidos para serem preenchiso pelo sistema)
+5. cadastro de modelos de orçamentos
+6. cadastro apresentação da empresa
+7. cadastro apresentação dos produtos
+8. aba configurações do admin para cadastrar webhook email, whatsapp, emails de origem, etc
+
+0. deixe o changed_by preenchido com o usuário logado via Supabase Auth
+1. no dashboard, quando for selecionado algum card que esta exibindo alguma coisa, deve abrir a página correspondente para listar as referências ou listar na parte de baixo da tela do dashboard
+2. o menu é melhor colocar do lado esquerdo da página e utilizar ícones também, para que seja retrátil
+3. ter uma área onde mostra mensagens recebidas em email e whatsapp com opção de ativar alarme isso vai ser através de webhooks a serem cadastrados também em configurações
+4. o cadastro de usuário não vai exigir confirmação de email
+
+1. quero ter versionamento sincronizado com o git
+2. no sistema, na parte de baixo do menu, tem que ter a versão do sistema e o número de compilação + data e hora para o meu controle: 1.0.123-17.02.2026-11.53.02
+3. toda compliação deverá fazer o commit como nova versão, mantendo semp as 20 últimas compilações ou sugira uma forma melhor para este controle
+

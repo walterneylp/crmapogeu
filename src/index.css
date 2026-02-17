@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: 42 40% 98%;
+  --fg: 210 27% 14%;
+  --card: 0 0% 100%;
+  --border: 30 20% 88%;
+  --muted: 35 30% 94%;
+  --accent: 14 89% 57%;
+}
+
+.dark {
+  --bg: 220 18% 10%;
+  --fg: 40 30% 96%;
+  --card: 220 16% 14%;
+  --border: 220 10% 23%;
+  --muted: 220 14% 18%;
+  --accent: 21 90% 58%;
+}
+
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-bg text-fg;
+  font-family: 'Manrope', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(255, 120, 70, 0.12), transparent 40%),
+    radial-gradient(circle at 85% 0%, rgba(250, 190, 60, 0.1), transparent 35%);
+}
+
+.code {
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.card {
+  @apply rounded-2xl border bg-card shadow-soft;
+}
+
+.btn {
+  @apply inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition;
+}
+
+.btn-primary {
+  @apply btn text-white;
+  background: linear-gradient(135deg, #f97316, #ef4444);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.06);
+}
+
+.btn-secondary {
+  @apply btn bg-muted text-fg hover:opacity-85;
+}
+
+.input {
+  @apply w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none focus:ring-2;
+  focus-ring-color: hsl(var(--accent));
+}
+
+.badge {
+  @apply rounded-full px-2.5 py-1 text-xs font-semibold;
+}
