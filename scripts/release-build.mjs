@@ -25,9 +25,7 @@ function nowStamp() {
 }
 
 function ensureGitRepo() {
-  try {
-    run('git rev-parse --is-inside-work-tree');
-  } catch {
+  if (!existsSync('.git')) {
     runInherit('git init -b main');
   }
 }
@@ -81,11 +79,6 @@ function pruneBuildTags() {
   }
 }
 
-function hasChanges() {
-  const status = run('git status --porcelain');
-  return status.length > 0;
-}
-
 function main() {
   ensureGitRepo();
 
@@ -105,12 +98,12 @@ function main() {
 
   runInherit('git add -A');
 
-  if (!hasChanges()) {
+  try {
+    runInherit(`git commit -m "build: ${fullVersion}"`);
+  } catch {
     console.log(`Sem alteracoes para commit. Versao atual: ${fullVersion}`);
     return;
   }
-
-  runInherit(`git commit -m "build: ${fullVersion}"`);
   runInherit(`git tag -a build/v${semver} -m "Build ${fullVersion}"`);
   pruneBuildTags();
 
