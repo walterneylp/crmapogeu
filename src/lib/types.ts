@@ -59,10 +59,14 @@ export interface AppUser {
   id: string;
   name: string;
   email: string;
+  login: string;
+  phone: string | null;
   role: 'admin' | 'comercial' | 'gestor';
   active: boolean;
   created_at: string;
 }
+
+export type SessionUser = Pick<AppUser, 'id' | 'name' | 'login' | 'role' | 'email' | 'phone'>;
 
 export interface ProductItem {
   id: string;

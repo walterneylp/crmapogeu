@@ -21,17 +21,19 @@ import {
 import { useEffect, useState } from 'react';
 import { applyTheme, getInitialTheme } from './theme';
 import { BUILD_NUMBER, BUILD_VERSION } from '@/buildInfo';
+import type { SessionUser } from '@/lib/types';
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ReactNode;
+  adminOnly?: boolean;
 }
 
 const nav: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   { to: '/contacts', label: 'Contatos', icon: <Users size={16} /> },
-  { to: '/users', label: 'Usuarios', icon: <UserCircle2 size={16} /> },
+  { to: '/users', label: 'Usuarios', icon: <UserCircle2 size={16} />, adminOnly: true },
   { to: '/groups', label: 'Grupos', icon: <Users2 size={16} /> },
   { to: '/products', label: 'Produtos', icon: <Briefcase size={16} /> },
   { to: '/quote-models', label: 'Modelos', icon: <FileText size={16} /> },
@@ -40,11 +42,19 @@ const nav: NavItem[] = [
   { to: '/pipeline', label: 'Pipeline', icon: <ClipboardList size={16} /> },
   { to: '/agenda', label: 'Agenda', icon: <ListChecks size={16} /> },
   { to: '/messages', label: 'Mensagens', icon: <MessageSquare size={16} /> },
-  { to: '/admin-settings', label: 'Admin', icon: <Settings size={16} /> },
-  { to: '/audit', label: 'Auditoria', icon: <SearchCheck size={16} /> },
+  { to: '/admin-settings', label: 'Admin', icon: <Settings size={16} />, adminOnly: true },
+  { to: '/audit', label: 'Auditoria', icon: <SearchCheck size={16} />, adminOnly: true },
 ];
 
-export function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({
+  children,
+  user,
+  onLogout,
+}: {
+  children: React.ReactNode;
+  user: SessionUser;
+  onLogout: () => void;
+}) {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -60,6 +70,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
     setTheme(next);
     applyTheme(next);
   };
+
+  const visibleNav = nav.filter((item) => !item.adminOnly || user.role === 'admin');
 
   return (
     <div className="min-h-screen md:flex">
@@ -78,7 +90,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             </button>
           </div>
           <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-            {nav.map((item) => (
+            {visibleNav.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -129,8 +141,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Link className="btn-secondary" to="/messages">
                 <Bell size={16} /> Alertas
               </Link>
-              <button className="btn-secondary" type="button">
-                <UserCircle2 size={16} /> Admin
+              <button className="btn-secondary" type="button" onClick={onLogout}>
+                <UserCircle2 size={16} /> Sair ({user.login})
               </button>
             </div>
           </div>

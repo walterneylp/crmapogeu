@@ -114,11 +114,23 @@ create table if not exists app_users (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   email text not null unique,
+  login text not null unique,
+  phone text,
+  password_hash text not null,
   role text not null check (role in ('admin', 'comercial', 'gestor')) default 'comercial',
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table app_users add column if not exists login text;
+alter table app_users add column if not exists phone text;
+alter table app_users add column if not exists password_hash text;
+update app_users set login = lower(split_part(email, '@', 1)) where login is null and email is not null;
+update app_users set password_hash = crypt('123456', gen_salt('bf')) where password_hash is null;
+alter table app_users alter column login set not null;
+alter table app_users alter column password_hash set not null;
+create unique index if not exists idx_app_users_login on app_users(login);
 
 create table if not exists products (
   id uuid primary key default gen_random_uuid(),
@@ -234,6 +246,66 @@ begin
   return new;
 end;
 $$;
+
+create or replace function hash_app_user_password()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'INSERT' then
+    if new.password_hash is null or btrim(new.password_hash) = '' then
+      raise exception 'Senha obrigatoria para novo usuario';
+    end if;
+    if new.password_hash !~ '^\$2[abxy]\$' then
+      new.password_hash := crypt(new.password_hash, gen_salt('bf'));
+    end if;
+    new.login := lower(new.login);
+  elsif tg_op = 'UPDATE' then
+    if new.password_hash is null or btrim(new.password_hash) = '' then
+      new.password_hash := old.password_hash;
+    elsif new.password_hash is distinct from old.password_hash and new.password_hash !~ '^\$2[abxy]\$' then
+      new.password_hash := crypt(new.password_hash, gen_salt('bf'));
+    end if;
+    new.login := lower(new.login);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_hash_app_users_password on app_users;
+create trigger trg_hash_app_users_password
+before insert or update on app_users
+for each row execute function hash_app_user_password();
+
+create or replace function app_authenticate(p_login text, p_password text)
+returns table (
+  id uuid,
+  name text,
+  email text,
+  login text,
+  phone text,
+  role text,
+  active boolean
+)
+language sql
+security definer
+as $$
+  select
+    u.id,
+    u.name,
+    u.email,
+    u.login,
+    u.phone,
+    u.role::text,
+    u.active
+  from app_users u
+  where u.login = lower(trim(p_login))
+    and u.active = true
+    and u.password_hash = crypt(p_password, u.password_hash)
+  limit 1;
+$$;
+
+grant execute on function app_authenticate(text, text) to anon, authenticated;
 
 drop trigger if exists trg_contacts_updated_at on contacts;
 create trigger trg_contacts_updated_at before update on contacts for each row execute function set_updated_at();
@@ -432,6 +504,10 @@ from (
     ('smtp_config', '{"host":"smtp.exemplo.com","port":587,"secure":false,"user":"","enabled":false}', 'Configuracao SMTP padrao')
 ) as s(key, value, description)
 where not exists (select 1 from admin_settings a where a.key = s.key);
+
+insert into app_users (name, email, login, phone, password_hash, role, active)
+select 'Administrador', 'admin@crmapogeu.local', 'admin', '(11) 99999-9999', '123456', 'admin', true
+where not exists (select 1 from app_users u where u.login = 'admin');
 
 -- Para desenvolvimento local:
 -- 1) Se usar anon key sem auth, desabilite RLS temporariamente.
