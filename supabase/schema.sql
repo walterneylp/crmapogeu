@@ -256,15 +256,15 @@ begin
     if new.password_hash is null or btrim(new.password_hash) = '' then
       raise exception 'Senha obrigatoria para novo usuario';
     end if;
-    if new.password_hash !~ '^\$2[abxy]\$' then
-      new.password_hash := crypt(new.password_hash, gen_salt('bf'));
+    if new.password_hash !~ '^[a-f0-9]{32}$' then
+      new.password_hash := md5(new.password_hash);
     end if;
     new.login := lower(new.login);
   elsif tg_op = 'UPDATE' then
     if new.password_hash is null or btrim(new.password_hash) = '' then
       new.password_hash := old.password_hash;
-    elsif new.password_hash is distinct from old.password_hash and new.password_hash !~ '^\$2[abxy]\$' then
-      new.password_hash := crypt(new.password_hash, gen_salt('bf'));
+    elsif new.password_hash is distinct from old.password_hash and new.password_hash !~ '^[a-f0-9]{32}$' then
+      new.password_hash := md5(new.password_hash);
     end if;
     new.login := lower(new.login);
   end if;
@@ -301,7 +301,7 @@ as $$
   from app_users u
   where u.login = lower(trim(p_login))
     and u.active = true
-    and u.password_hash = crypt(p_password, u.password_hash)
+    and u.password_hash = md5(p_password)
   limit 1;
 $$;
 
@@ -508,6 +508,11 @@ where not exists (select 1 from admin_settings a where a.key = s.key);
 insert into app_users (name, email, login, phone, password_hash, role, active)
 select 'Administrador', 'admin@crmapogeu.local', 'admin', '(11) 99999-9999', '123456', 'admin', true
 where not exists (select 1 from app_users u where u.login = 'admin');
+
+update app_users
+set password_hash = md5(password_hash)
+where password_hash is not null
+  and password_hash !~ '^[a-f0-9]{32}$';
 
 -- Para desenvolvimento local:
 -- 1) Se usar anon key sem auth, desabilite RLS temporariamente.
