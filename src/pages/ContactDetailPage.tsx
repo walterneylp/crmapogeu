@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SectionTitle } from '@/components/SectionTitle';
 import { supabase } from '@/lib/supabase';
-import type { ClientGroup, Contact, Interaction, LossReason, TaskItem } from '@/lib/types';
+import type { ClientGroup, Contact, Interaction, LossReason, SessionUser, TaskItem } from '@/lib/types';
 import { formatDateTime, toISODateTimeLocal } from '@/lib/utils';
 
 const initialInteraction = {
@@ -18,7 +18,7 @@ const initialTask = {
   dueAt: '',
 };
 
-export function ContactDetailPage() {
+export function ContactDetailPage({ currentUser }: { currentUser: SessionUser }) {
   const { id } = useParams();
   const [contact, setContact] = useState<Contact | null>(null);
   const [interactions, setInteractions] = useState<Interaction[]>([]);
@@ -33,8 +33,13 @@ export function ContactDetailPage() {
   const load = useCallback(async () => {
     if (!id) return;
 
+    const contactQuery = supabase.from('contacts').select('*').eq('id', id);
+    if (!currentUser.can_view_all) {
+      contactQuery.eq('owner_user_id', currentUser.id);
+    }
+
     const [cRes, iRes, tRes, lRes, gRes] = await Promise.all([
-      supabase.from('contacts').select('*').eq('id', id).single(),
+      contactQuery.single(),
       supabase
         .from('interactions')
         .select('*')
@@ -50,7 +55,7 @@ export function ContactDetailPage() {
     if (!tRes.error) setTasks((tRes.data as TaskItem[]) ?? []);
     if (!lRes.error) setLossReasons((lRes.data as LossReason[]) ?? []);
     if (!gRes.error) setGroups((gRes.data as ClientGroup[]) ?? []);
-  }, [id]);
+  }, [id, currentUser.can_view_all, currentUser.id]);
 
   useEffect(() => {
     load();

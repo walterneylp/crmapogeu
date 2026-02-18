@@ -63,10 +63,11 @@ export interface AppUser {
   phone: string | null;
   role: 'admin' | 'comercial' | 'gestor';
   active: boolean;
+  can_view_all: boolean;
   created_at: string;
 }
 
-export type SessionUser = Pick<AppUser, 'id' | 'name' | 'login' | 'role' | 'email' | 'phone'>;
+export type SessionUser = Pick<AppUser, 'id' | 'name' | 'login' | 'role' | 'email' | 'phone' | 'can_view_all'>;
 
 export interface ProductItem {
   id: string;

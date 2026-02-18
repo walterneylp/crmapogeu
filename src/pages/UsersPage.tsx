@@ -11,6 +11,7 @@ const initialForm = {
   password: '',
   role: 'comercial' as AppUser['role'],
   active: true,
+  can_view_all: true,
 };
 
 export function UsersPage() {
@@ -21,7 +22,7 @@ export function UsersPage() {
   const load = async () => {
     const { data, error } = await supabase
       .from('app_users')
-      .select('id,name,email,login,phone,role,active,created_at')
+      .select('id,name,email,login,phone,role,active,can_view_all,created_at')
       .order('created_at', { ascending: false });
     if (!error) setUsers((data as AppUser[]) ?? []);
   };
@@ -45,6 +46,7 @@ export function UsersPage() {
       phone: form.phone.trim() || null,
       role: form.role,
       active: form.active,
+      can_view_all: form.can_view_all,
     };
 
     if (form.password.trim()) {
@@ -73,6 +75,7 @@ export function UsersPage() {
       password: '',
       role: u.role,
       active: u.active,
+      can_view_all: u.can_view_all,
     });
   };
 
@@ -103,6 +106,10 @@ export function UsersPage() {
             <option value="true">Ativo</option>
             <option value="false">Inativo</option>
           </select>
+          <select className="input" value={form.can_view_all ? 'true' : 'false'} onChange={(e) => setForm((p) => ({ ...p, can_view_all: e.target.value === 'true' }))}>
+            <option value="true">Pode ver todos os clientes</option>
+            <option value="false">Ve somente os clientes dele</option>
+          </select>
           <div className="md:col-span-2 flex justify-end gap-2">
             {editingId ? (
               <button
@@ -130,6 +137,7 @@ export function UsersPage() {
               <th className="px-4 py-3">Telefone</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Perfil</th>
+              <th className="px-4 py-3">Visibilidade</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Acoes</th>
             </tr>
@@ -142,6 +150,7 @@ export function UsersPage() {
                 <td className="px-4 py-3">{u.phone ?? '-'}</td>
                 <td className="px-4 py-3">{u.email}</td>
                 <td className="px-4 py-3">{u.role}</td>
+                <td className="px-4 py-3">{u.can_view_all ? 'Todos os clientes' : 'Somente proprios'}</td>
                 <td className="px-4 py-3">{u.active ? 'Ativo' : 'Inativo'}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">

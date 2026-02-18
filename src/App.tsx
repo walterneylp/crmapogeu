@@ -47,8 +47,8 @@ export default function App() {
               <Layout user={user} onLogout={logout}>
                 <Routes>
                   <Route path="/" element={<DashboardPage />} />
-                  <Route path="/contacts" element={<ContactsPage />} />
-                  <Route path="/contacts/:id" element={<ContactDetailPage />} />
+                  <Route path="/contacts" element={<ContactsPage currentUser={user} />} />
+                  <Route path="/contacts/:id" element={<ContactDetailPage currentUser={user} />} />
                   <Route path="/groups" element={<GroupsPage />} />
                   <Route
                     path="/users"
@@ -79,7 +79,7 @@ export default function App() {
                       </AdminOnly>
                     }
                   />
-                  <Route path="/pipeline" element={<PipelinePage />} />
+                  <Route path="/pipeline" element={<PipelinePage currentUser={user} />} />
                   <Route path="/agenda" element={<AgendaPage />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

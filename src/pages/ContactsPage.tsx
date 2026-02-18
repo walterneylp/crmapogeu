@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { SectionTitle } from '@/components/SectionTitle';
 import { supabase } from '@/lib/supabase';
-import type { ClientGroup, Contact, PipelineStage } from '@/lib/types';
+import type { AppUser, ClientGroup, Contact, PipelineStage, SessionUser } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
@@ -17,32 +17,41 @@ const initialForm = {
   source: '',
   client_group_id: '',
   current_stage_id: '',
+  owner_user_id: '',
 };
 
-export function ContactsPage() {
+export function ContactsPage({ currentUser }: { currentUser: SessionUser }) {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [groups, setGroups] = useState<ClientGroup[]>([]);
+  const [users, setUsers] = useState<Pick<AppUser, 'id' | 'name' | 'active'>[]>([]);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
 
-  const load = async () => {
-    const [cRes, sRes, gRes] = await Promise.all([
-      supabase.from('contacts').select('*').order('created_at', { ascending: false }),
+  const load = useCallback(async () => {
+    const contactsQuery = supabase.from('contacts').select('*').order('created_at', { ascending: false });
+    if (!currentUser.can_view_all) {
+      contactsQuery.eq('owner_user_id', currentUser.id);
+    }
+
+    const [cRes, sRes, gRes, uRes] = await Promise.all([
+      contactsQuery,
       supabase.from('pipeline_stages').select('*').order('sort_order', { ascending: true }),
       supabase.from('client_groups').select('*').order('name', { ascending: true }),
+      supabase.from('app_users').select('id,name,active').order('name', { ascending: true }),
     ]);
 
     if (!cRes.error) setContacts((cRes.data as Contact[]) ?? []);
     if (!sRes.error) setStages((sRes.data as PipelineStage[]) ?? []);
     if (!gRes.error) setGroups((gRes.data as ClientGroup[]) ?? []);
-  };
+    if (!uRes.error) setUsers((uRes.data as Pick<AppUser, 'id' | 'name' | 'active'>[]) ?? []);
+  }, [currentUser.can_view_all, currentUser.id]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
@@ -56,6 +65,12 @@ export function ContactsPage() {
     groups.forEach((g) => map.set(g.id, g.name));
     return map;
   }, [groups]);
+
+  const userNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    users.forEach((u) => map.set(u.id, u.name));
+    return map;
+  }, [users]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +89,7 @@ export function ContactsPage() {
       role: form.role || null,
       source: form.source || null,
       client_group_id: form.client_group_id || null,
-      owner_user_id: null,
+      owner_user_id: currentUser.can_view_all ? form.owner_user_id || null : currentUser.id,
     };
 
     const { error } = await supabase.from('contacts').insert(payload);
@@ -119,6 +134,7 @@ export function ContactsPage() {
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Empresa</th>
                 <th className="px-4 py-3">Grupo</th>
+                <th className="px-4 py-3">Responsavel</th>
                 <th className="px-4 py-3">Telefone</th>
                 <th className="px-4 py-3">WhatsApp</th>
                 <th className="px-4 py-3">Criado em</th>
@@ -134,6 +150,7 @@ export function ContactsPage() {
                   </td>
                   <td className="px-4 py-3">{c.company ?? '-'}</td>
                   <td className="px-4 py-3">{c.client_group_id ? groupNameById.get(c.client_group_id) ?? '-' : '-'}</td>
+                  <td className="px-4 py-3">{c.owner_user_id ? userNameById.get(c.owner_user_id) ?? '-' : '-'}</td>
                   <td className="px-4 py-3">{c.phone ?? '-'}</td>
                   <td className="px-4 py-3">{c.whatsapp ?? '-'}</td>
                   <td className="px-4 py-3">{formatDateTime(c.created_at)}</td>
@@ -141,7 +158,7 @@ export function ContactsPage() {
               ))}
               {!filtered.length ? (
                 <tr>
-                  <td className="px-4 py-8 text-center opacity-70" colSpan={6}>
+                  <td className="px-4 py-8 text-center opacity-70" colSpan={7}>
                     Nenhum contato encontrado.
                   </td>
                 </tr>
@@ -177,6 +194,19 @@ export function ContactsPage() {
                 {stages.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="input md:col-span-2"
+                value={currentUser.can_view_all ? form.owner_user_id : currentUser.id}
+                onChange={(e) => setForm({ ...form, owner_user_id: e.target.value })}
+                disabled={!currentUser.can_view_all}
+              >
+                <option value="">{currentUser.can_view_all ? 'Sem responsavel' : 'Responsavel'}</option>
+                {users.filter((u) => u.active).map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
                   </option>
                 ))}
               </select>

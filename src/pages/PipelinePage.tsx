@@ -1,25 +1,30 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { SectionTitle } from '@/components/SectionTitle';
 import { supabase } from '@/lib/supabase';
-import type { Contact, PipelineStage } from '@/lib/types';
+import type { Contact, PipelineStage, SessionUser } from '@/lib/types';
 import { Link } from 'react-router-dom';
 
-export function PipelinePage() {
+export function PipelinePage({ currentUser }: { currentUser: SessionUser }) {
   const [stages, setStages] = useState<PipelineStage[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
 
-  const load = async () => {
+  const load = useCallback(async () => {
+    const contactsQuery = supabase.from('contacts').select('*').order('created_at', { ascending: false });
+    if (!currentUser.can_view_all) {
+      contactsQuery.eq('owner_user_id', currentUser.id);
+    }
+
     const [sRes, cRes] = await Promise.all([
       supabase.from('pipeline_stages').select('*').order('sort_order', { ascending: true }),
-      supabase.from('contacts').select('*').order('created_at', { ascending: false }),
+      contactsQuery,
     ]);
     if (!sRes.error) setStages((sRes.data as PipelineStage[]) ?? []);
     if (!cRes.error) setContacts((cRes.data as Contact[]) ?? []);
-  };
+  }, [currentUser.can_view_all, currentUser.id]);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, Contact[]>();

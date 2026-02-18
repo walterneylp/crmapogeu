@@ -119,6 +119,7 @@ create table if not exists app_users (
   password_hash text not null,
   role text not null check (role in ('admin', 'comercial', 'gestor')) default 'comercial',
   active boolean not null default true,
+  can_view_all boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -126,6 +127,7 @@ create table if not exists app_users (
 alter table app_users add column if not exists login text;
 alter table app_users add column if not exists phone text;
 alter table app_users add column if not exists password_hash text;
+alter table app_users add column if not exists can_view_all boolean not null default true;
 update app_users set login = lower(split_part(email, '@', 1)) where login is null and email is not null;
 update app_users set password_hash = crypt('123456', gen_salt('bf')) where password_hash is null;
 alter table app_users alter column login set not null;
@@ -277,7 +279,9 @@ create trigger trg_hash_app_users_password
 before insert or update on app_users
 for each row execute function hash_app_user_password();
 
-create or replace function app_authenticate(p_login text, p_password text)
+drop function if exists app_authenticate(text, text);
+
+create function app_authenticate(p_login text, p_password text)
 returns table (
   id uuid,
   name text,
@@ -285,7 +289,8 @@ returns table (
   login text,
   phone text,
   role text,
-  active boolean
+  active boolean,
+  can_view_all boolean
 )
 language sql
 security definer
@@ -297,7 +302,8 @@ as $$
     u.login,
     u.phone,
     u.role::text,
-    u.active
+    u.active,
+    u.can_view_all
   from app_users u
   where u.login = lower(trim(p_login))
     and u.active = true
@@ -505,14 +511,18 @@ from (
 ) as s(key, value, description)
 where not exists (select 1 from admin_settings a where a.key = s.key);
 
-insert into app_users (name, email, login, phone, password_hash, role, active)
-select 'Administrador', 'admin@crmapogeu.local', 'admin', '(11) 99999-9999', '123456', 'admin', true
+insert into app_users (name, email, login, phone, password_hash, role, active, can_view_all)
+select 'Administrador', 'admin@crmapogeu.local', 'admin', '(11) 99999-9999', '123456', 'admin', true, true
 where not exists (select 1 from app_users u where u.login = 'admin');
 
 update app_users
 set password_hash = md5(password_hash)
 where password_hash is not null
   and password_hash !~ '^[a-f0-9]{32}$';
+
+update app_users
+set can_view_all = true
+where role = 'admin' and can_view_all is distinct from true;
 
 -- Para desenvolvimento local:
 -- 1) Se usar anon key sem auth, desabilite RLS temporariamente.
