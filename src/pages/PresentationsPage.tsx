@@ -133,7 +133,7 @@ function applyLayoutProduct(
   };
 }
 
-export function PresentationsPage() {
+export function PresentationsPage({ section = 'all' }: { section?: 'company' | 'product' | 'all' }) {
   const [companyItems, setCompanyItems] = useState<CompanyPresentation[]>([]);
   const [productItems, setProductItems] = useState<ProductPresentation[]>([]);
   const [products, setProducts] = useState<ProductItem[]>([]);
@@ -360,13 +360,23 @@ export function PresentationsPage() {
     }
   };
 
+  const showCompanySection = section === 'all' || section === 'company';
+  const showProductSection = section === 'all' || section === 'product';
+  const pageSubtitle =
+    section === 'company'
+      ? 'Apresentações da empresa'
+      : section === 'product'
+        ? 'Apresentações de produtos'
+        : 'Estrutura em lista, editor com cola formatada, preview na tela e geração em PDF';
+
   return (
     <div>
       <SectionTitle
         title="Apresentações"
-        subtitle="Estrutura em lista, editor com cola formatada, preview na tela e geração em PDF"
+        subtitle={pageSubtitle}
       />
 
+      {showCompanySection ? (
       <div className="mb-4 card p-4">
         <h2 className="mb-3 text-lg font-extrabold">Apresentação da empresa</h2>
         <form className="grid gap-3" onSubmit={submitCompany}>
@@ -481,7 +491,9 @@ export function PresentationsPage() {
           </table>
         </div>
       </div>
+      ) : null}
 
+      {showProductSection ? (
       <div className="card p-4">
         <h2 className="mb-3 text-lg font-extrabold">Apresentações de produtos</h2>
         <form className="grid gap-3" onSubmit={submitProduct}>
@@ -617,6 +629,7 @@ export function PresentationsPage() {
           </table>
         </div>
       </div>
+      ) : null}
     </div>
   );
 }

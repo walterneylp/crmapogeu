@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   Bell,
   BookOpenText,
@@ -24,10 +24,11 @@ import { BUILD_NUMBER, BUILD_VERSION } from '@/buildInfo';
 import type { SessionUser } from '@/lib/types';
 
 interface NavItem {
-  to: string;
+  to?: string;
   label: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  children?: Array<{ to: string; label: string }>;
 }
 
 const nav: NavItem[] = [
@@ -38,7 +39,14 @@ const nav: NavItem[] = [
   { to: '/products', label: 'Produtos', icon: <Briefcase size={16} /> },
   { to: '/quote-models', label: 'Modelos', icon: <FileText size={16} /> },
   { to: '/quotes', label: 'Orçamentos', icon: <WalletCards size={16} /> },
-  { to: '/presentations', label: 'Apresentações', icon: <BookOpenText size={16} /> },
+  {
+    label: 'Apresentações',
+    icon: <BookOpenText size={16} />,
+    children: [
+      { to: '/presentations/company', label: 'Empresa' },
+      { to: '/presentations/products', label: 'Produtos' },
+    ],
+  },
   { to: '/pipeline', label: 'Pipeline', icon: <ClipboardList size={16} /> },
   { to: '/agenda', label: 'Agenda', icon: <ListChecks size={16} /> },
   { to: '/messages', label: 'Mensagens', icon: <MessageSquare size={16} /> },
@@ -58,6 +66,7 @@ export function Layout({
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const initial = getInitialTheme();
@@ -91,19 +100,50 @@ export function Layout({
           </div>
           <nav className="flex-1 space-y-1 overflow-y-auto p-3">
             {visibleNav.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold ${
-                    isActive ? 'bg-muted' : 'hover:bg-muted'
-                  }`
-                }
-              >
-                <span>{item.icon}</span>
-                {!collapsed ? <span>{item.label}</span> : null}
-              </NavLink>
+              item.to ? (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMobileOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold ${
+                      isActive ? 'bg-muted' : 'hover:bg-muted'
+                    }`
+                  }
+                >
+                  <span>{item.icon}</span>
+                  {!collapsed ? <span>{item.label}</span> : null}
+                </NavLink>
+              ) : (
+                <div key={item.label}>
+                  <NavLink
+                    to={item.children?.[0]?.to || '/'}
+                    onClick={() => setMobileOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold ${
+                      item.children?.some((child) => location.pathname.startsWith(child.to)) ? 'bg-muted' : 'hover:bg-muted'
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    {!collapsed ? <span>{item.label}</span> : null}
+                  </NavLink>
+                  {!collapsed && item.children?.length ? (
+                    <div className="mt-1 space-y-1 pl-8">
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          onClick={() => setMobileOpen(false)}
+                          className={({ isActive }) =>
+                            `block rounded-lg px-3 py-1.5 text-sm font-medium ${isActive ? 'bg-muted' : 'hover:bg-muted'}`
+                          }
+                        >
+                          {child.label}
+                        </NavLink>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )
             ))}
           </nav>
           <div className="border-t p-3">

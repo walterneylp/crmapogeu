@@ -61,7 +61,9 @@ export default function App() {
                   <Route path="/products" element={<ProductsPage />} />
                   <Route path="/quote-models" element={<QuoteModelsPage />} />
                   <Route path="/quotes" element={<QuotesPage />} />
-                  <Route path="/presentations" element={<PresentationsPage />} />
+                  <Route path="/presentations" element={<Navigate to="/presentations/company" replace />} />
+                  <Route path="/presentations/company" element={<PresentationsPage section="company" />} />
+                  <Route path="/presentations/products" element={<PresentationsPage section="product" />} />
                   <Route
                     path="/admin-settings"
                     element={
