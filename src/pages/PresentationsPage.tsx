@@ -59,7 +59,11 @@ const buildInitialForm = (): PresentationEditorForm => ({
 });
 
 const initialCompany = buildInitialForm();
-const initialProduct: ProductPresentationEditorForm = { product_id: '', ...buildInitialForm() };
+const initialProduct: ProductPresentationEditorForm = {
+  product_id: '',
+  ...buildInitialForm(),
+  footer_text: 'Apresentação de produto',
+};
 
 function toLayout(form: PresentationEditorForm): PresentationLayoutConfig {
   return {
@@ -528,7 +532,15 @@ export function PresentationsPage() {
           <div className="grid gap-3 md:grid-cols-3">
             <label className="text-xs font-semibold text-fg/80">Espessura linha cabeçalho<input className="input mt-1" type="number" min={0.2} max={4} step="0.1" value={productForm.header_line_width} onChange={(e) => setProductForm((v) => ({ ...v, header_line_width: Number(e.target.value) || DEFAULT_PRESENTATION_LAYOUT.header_line_width }))} /></label>
             <label className="text-xs font-semibold text-fg/80">Espessura linha rodapé<input className="input mt-1" type="number" min={0.2} max={4} step="0.1" value={productForm.footer_line_width} onChange={(e) => setProductForm((v) => ({ ...v, footer_line_width: Number(e.target.value) || DEFAULT_PRESENTATION_LAYOUT.footer_line_width }))} /></label>
-            <input className="input" placeholder="Texto de rodapé" value={productForm.footer_text} onChange={(e) => setProductForm((v) => ({ ...v, footer_text: e.target.value }))} />
+            <label className="text-xs font-semibold text-fg/80">
+              Frase do rodapé (produto)
+              <input
+                className="input mt-1"
+                placeholder="Ex: Apresentação de produto"
+                value={productForm.footer_text}
+                onChange={(e) => setProductForm((v) => ({ ...v, footer_text: e.target.value }))}
+              />
+            </label>
           </div>
 
           <div className="grid gap-3 md:grid-cols-4">

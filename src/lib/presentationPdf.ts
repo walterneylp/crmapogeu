@@ -121,7 +121,13 @@ export async function generatePresentationPdf({ title, content, layout, subtitle
       doc.setFont(font, 'normal');
       doc.setFontSize(subtitleFontSize);
       doc.setTextColor(subtitleColor[0], subtitleColor[1], subtitleColor[2]);
-      doc.text(subtitle, pageWidth - marginX, headerLineY - 12, { align: 'right', maxWidth: contentWidth * 0.7 });
+      const subtitleLines = doc.splitTextToSize(subtitle, contentWidth * 0.7);
+      const subtitleLineHeight = Math.max(subtitleFontSize + 2, 14);
+      const subtitleBottomY = headerLineY - 16;
+      const subtitleStartY = subtitleBottomY - Math.max(0, subtitleLines.length - 1) * subtitleLineHeight;
+      subtitleLines.forEach((line: string, index: number) => {
+        doc.text(line, pageWidth - marginX, subtitleStartY + index * subtitleLineHeight, { align: 'right' });
+      });
     }
 
     doc.setFont(font, 'bold');
