@@ -103,7 +103,11 @@ export async function generateQuotePdf({ quote, contact, product, model }: Gener
   const date = new Date(quote.created_at).toLocaleDateString('pt-BR');
   const templateData = buildQuoteTemplateData({ quote, contact, product, params: dynamicParams, date, paymentTerms });
   const bodyRaw = model ? renderTemplate(model.template_content, templateData) : quote.generated_content ?? '';
-  const bodyBlocks = parseTemplateBlocks(bodyRaw);
+  const bodyBlocks = parseTemplateBlocks(bodyRaw, layout.justify_all);
+  const recipientLines = renderTemplate(layout.recipient_template, templateData)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 
   const safeTitle = String(quote.title ?? '').trim() || 'Orçamento';
   const primary = hexToRgb(layout.primary_color, [249, 115, 22]);
@@ -272,7 +276,21 @@ export async function generateQuotePdf({ quote, contact, product, model }: Gener
       }
     }
 
-    y += 8;
+    if (layout.show_recipient && recipientLines.length) {
+      y += 6;
+      y = ensureSpace(y, lineHeight * recipientLines.length + 8);
+      applyBody();
+      doc.setFont(font, 'bold');
+      for (const line of recipientLines) {
+        y = ensureSpace(y, lineHeight + 2);
+        const wrapped = doc.splitTextToSize(line, contentWidth);
+        doc.text(wrapped, marginX, y);
+        y += wrapped.length * lineHeight;
+      }
+      y += 10;
+    }
+
+    y += 12;
     y = ensureSpace(y, 26);
     doc.setFont(font, 'bold');
     doc.setFontSize(layout.subtitle_font_size);
@@ -313,7 +331,11 @@ export async function generateQuotePdf({ quote, contact, product, model }: Gener
     const text = block.type === 'bullet' ? `• ${block.text}` : block.text;
     const lines = doc.splitTextToSize(text, contentWidth);
     y = ensureSpace(y, lines.length * lineHeight + 2);
-    doc.text(lines, marginX, y);
+    if (block.justified) {
+      doc.text(text, marginX, y, { maxWidth: contentWidth, align: 'justify' });
+    } else {
+      doc.text(lines, marginX, y);
+    }
     y += lines.length * lineHeight;
     }
 

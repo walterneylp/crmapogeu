@@ -179,6 +179,7 @@ create table if not exists company_presentations (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   content text not null,
+  parameters jsonb,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -189,10 +190,17 @@ create table if not exists product_presentations (
   product_id uuid references products(id) on delete set null,
   title text not null,
   content text not null,
+  parameters jsonb,
   active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table if exists company_presentations
+  add column if not exists parameters jsonb;
+
+alter table if exists product_presentations
+  add column if not exists parameters jsonb;
 
 create index if not exists idx_product_presentations_product on product_presentations(product_id);
 

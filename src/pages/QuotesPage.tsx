@@ -59,6 +59,8 @@ const initialForm = {
   table_line_width: DEFAULT_QUOTE_LAYOUT.table_line_width,
   show_summary: DEFAULT_QUOTE_LAYOUT.show_summary,
   show_additional_info: DEFAULT_QUOTE_LAYOUT.show_additional_info,
+  show_recipient: DEFAULT_QUOTE_LAYOUT.show_recipient,
+  recipient_template: DEFAULT_QUOTE_LAYOUT.recipient_template,
   show_commercial_terms: DEFAULT_QUOTE_LAYOUT.show_commercial_terms,
   visible_fields: DEFAULT_QUOTE_LAYOUT.visible_fields,
 };
@@ -188,6 +190,8 @@ export function QuotesPage() {
       table_line_width: layout.table_line_width,
       show_summary: layout.show_summary,
       show_additional_info: layout.show_additional_info,
+      show_recipient: layout.show_recipient,
+      recipient_template: layout.recipient_template,
       show_commercial_terms: layout.show_commercial_terms,
       visible_fields: layout.visible_fields,
     }));
@@ -303,6 +307,8 @@ export function QuotesPage() {
       table_line_width: form.table_line_width,
       show_summary: form.show_summary,
       show_additional_info: form.show_additional_info,
+      show_recipient: form.show_recipient,
+      recipient_template: safeText(form.recipient_template),
       show_commercial_terms: form.show_commercial_terms,
       visible_fields: form.visible_fields,
     };
@@ -459,6 +465,8 @@ export function QuotesPage() {
         table_line_width: form.table_line_width,
         show_summary: form.show_summary,
         show_additional_info: form.show_additional_info,
+        show_recipient: form.show_recipient,
+        recipient_template: safeText(form.recipient_template),
         show_commercial_terms: form.show_commercial_terms,
         visible_fields: form.visible_fields,
       };
@@ -942,6 +950,16 @@ export function QuotesPage() {
                 <input type="checkbox" checked={form.show_summary} onChange={(e) => setForm((v) => ({ ...v, show_summary: e.target.checked }))} />
                 Exibir bloco "Resumo do orçamento"
               </label>
+              <label className="flex items-center gap-2 text-sm font-semibold">
+                <input type="checkbox" checked={form.show_recipient} onChange={(e) => setForm((v) => ({ ...v, show_recipient: e.target.checked }))} />
+                Incluir bloco "Destinatário"
+              </label>
+              <textarea
+                className="input min-h-[84px]"
+                placeholder={'Conteudo do destinatario (exemplo):\nContato: {{cliente}}\nEmpresa: {{empresa}}'}
+                value={form.recipient_template}
+                onChange={(e) => setForm((v) => ({ ...v, recipient_template: e.target.value }))}
+              />
               <label className="flex items-center gap-2 text-sm font-semibold">
                 <input type="checkbox" checked={form.show_additional_info} onChange={(e) => setForm((v) => ({ ...v, show_additional_info: e.target.checked }))} />
                 Exibir bloco "Informações adicionais"

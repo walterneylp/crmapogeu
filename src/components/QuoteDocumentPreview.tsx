@@ -50,7 +50,11 @@ export function QuoteDocumentPreview({ quote, contact, product, model }: QuoteDo
   const date = new Date(quote.created_at).toLocaleDateString('pt-BR');
   const templateData = buildQuoteTemplateData({ quote, contact, product, params: dynamicParams, date, paymentTerms });
   const bodyRaw = model ? renderTemplate(model.template_content, templateData) : quote.generated_content ?? '';
-  const bodyBlocks = parseTemplateBlocks(bodyRaw);
+  const bodyBlocks = parseTemplateBlocks(bodyRaw, layout.justify_all);
+  const recipientLines = renderTemplate(layout.recipient_template, templateData)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
 
   const dateBadge = <span className="text-xs font-semibold uppercase tracking-wide">Data: {date}</span>;
 
@@ -160,7 +164,17 @@ export function QuoteDocumentPreview({ quote, contact, product, model }: QuoteDo
         </section>
       ) : null}
 
-      <section className="relative z-10 mt-6 rounded-xl border p-5">
+      {layout.show_recipient ? (
+        <section className="relative z-10 mt-6 rounded-xl border p-5">
+          {recipientLines.map((line, index) => (
+            <p key={`recipient-${index}`} className={index === 0 ? 'font-semibold' : 'mt-1 font-semibold'} style={bodyColorStyle}>
+              {line}
+            </p>
+          ))}
+        </section>
+      ) : null}
+
+      <section className={`relative z-10 rounded-xl border p-5 ${layout.show_recipient ? 'mt-10' : 'mt-6'}`}>
         <h2 className="font-extrabold uppercase tracking-wide" style={{ color: layout.subtitle_color, fontSize: `${layout.subtitle_font_size}px` }}>
           Descrição da proposta
         </h2>
@@ -181,11 +195,11 @@ export function QuoteDocumentPreview({ quote, contact, product, model }: QuoteDo
               );
             if (block.type === 'bullet')
               return (
-                <p key={`bl-${idx}`} className="pl-4">
+                <p key={`bl-${idx}`} className="pl-4" style={block.justified ? { textAlign: 'justify' } : undefined}>
                   • {block.text}
                 </p>
               );
-            return <p key={`p-${idx}`}>{block.text}</p>;
+            return <p key={`p-${idx}`} style={block.justified ? { textAlign: 'justify' } : undefined}>{block.text}</p>;
           })}
         </div>
       </section>

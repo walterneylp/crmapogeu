@@ -104,6 +104,7 @@ export interface CompanyPresentation {
   id: string;
   title: string;
   content: string;
+  parameters?: Record<string, unknown> | null;
   active: boolean;
 }
 
@@ -112,6 +113,7 @@ export interface ProductPresentation {
   product_id: string | null;
   title: string;
   content: string;
+  parameters?: Record<string, unknown> | null;
   active: boolean;
 }
 

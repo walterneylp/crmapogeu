@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SectionTitle } from '@/components/SectionTitle';
 import { supabase } from '@/lib/supabase';
 import type { Contact, ProductItem, QuoteItem, QuoteModel } from '@/lib/types';
@@ -39,6 +39,9 @@ const initialForm = {
   table_line_width: DEFAULT_QUOTE_LAYOUT.table_line_width,
   show_summary: DEFAULT_QUOTE_LAYOUT.show_summary,
   show_additional_info: DEFAULT_QUOTE_LAYOUT.show_additional_info,
+  show_recipient: DEFAULT_QUOTE_LAYOUT.show_recipient,
+  recipient_template: DEFAULT_QUOTE_LAYOUT.recipient_template,
+  justify_all: DEFAULT_QUOTE_LAYOUT.justify_all,
   show_commercial_terms: DEFAULT_QUOTE_LAYOUT.show_commercial_terms,
   visible_fields: DEFAULT_QUOTE_LAYOUT.visible_fields,
 };
@@ -50,6 +53,7 @@ export function QuoteModelsPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewPdfLoading, setPreviewPdfLoading] = useState(false);
+  const templateRef = useRef<HTMLTextAreaElement | null>(null);
 
   const load = async () => {
     const { data, error } = await supabase.from('quote_models').select('*').order('name', { ascending: true });
@@ -102,6 +106,9 @@ export function QuoteModelsPage() {
           table_line_width: form.table_line_width,
           show_summary: form.show_summary,
           show_additional_info: form.show_additional_info,
+          show_recipient: form.show_recipient,
+          recipient_template: form.recipient_template,
+          justify_all: form.justify_all,
           show_commercial_terms: form.show_commercial_terms,
           visible_fields: form.visible_fields,
         },
@@ -196,6 +203,9 @@ export function QuoteModelsPage() {
             table_line_width: form.table_line_width,
             show_summary: form.show_summary,
             show_additional_info: form.show_additional_info,
+            show_recipient: form.show_recipient,
+            recipient_template: form.recipient_template,
+            justify_all: form.justify_all,
             show_commercial_terms: form.show_commercial_terms,
             visible_fields: form.visible_fields,
           },
@@ -254,6 +264,9 @@ export function QuoteModelsPage() {
       table_line_width: layout.table_line_width,
       show_summary: layout.show_summary,
       show_additional_info: layout.show_additional_info,
+      show_recipient: layout.show_recipient,
+      recipient_template: layout.recipient_template,
+      justify_all: layout.justify_all,
       show_commercial_terms: layout.show_commercial_terms,
       visible_fields: layout.visible_fields,
     });
@@ -321,6 +334,24 @@ export function QuoteModelsPage() {
     setForm((v) => ({ ...v, template_content: next }));
   };
 
+  const justifySelectedTemplateText = () => {
+    const textarea = templateRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart ?? 0;
+    const end = textarea.selectionEnd ?? 0;
+    if (start === end) {
+      alert('Selecione um trecho para justificar.');
+      return;
+    }
+    setForm((prev) => {
+      const source = prev.template_content;
+      const selected = source.slice(start, end);
+      if (!selected.trim()) return prev;
+      const wrapped = `{{just}}${selected}{{/just}}`;
+      return { ...prev, template_content: `${source.slice(0, start)}${wrapped}${source.slice(end)}` };
+    });
+  };
+
   const handlePreviewPdf = async () => {
     setPreviewPdfLoading(true);
     try {
@@ -348,7 +379,16 @@ export function QuoteModelsPage() {
             <input className="input" placeholder="Nome" value={form.name} onChange={(e) => setForm((v) => ({ ...v, name: e.target.value }))} />
             <input className="input" placeholder="Descrição" value={form.description} onChange={(e) => setForm((v) => ({ ...v, description: e.target.value }))} />
           </div>
-          <textarea className="input min-h-[180px]" placeholder={'Template formatado:\n# Titulo\n## Subtitulo\n- item\nParagrafo...\n\nVariaveis: {{cliente}}, {{valor_extenso}}, {{forma_pagamento}}, {{escopo}}\n\nDica: ao colar texto formatado, o sistema converte para manter estrutura.'} value={form.template_content} onPaste={onTemplatePaste} onChange={(e) => setForm((v) => ({ ...v, template_content: e.target.value }))} />
+          <textarea ref={templateRef} className="input min-h-[180px]" placeholder={'Template formatado:\n# Titulo\n## Subtitulo\n- item\nParagrafo...\n\nVariaveis: {{cliente}}, {{valor_extenso}}, {{forma_pagamento}}, {{escopo}}\n\nDica: ao colar texto formatado, o sistema converte para manter estrutura.'} value={form.template_content} onPaste={onTemplatePaste} onChange={(e) => setForm((v) => ({ ...v, template_content: e.target.value }))} />
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" onClick={justifySelectedTemplateText}>
+              Justificar trecho selecionado
+            </button>
+            <label className="flex items-center gap-2 text-sm font-semibold">
+              <input type="checkbox" checked={form.justify_all} onChange={(e) => setForm((v) => ({ ...v, justify_all: e.target.checked }))} />
+              Justificar texto completo
+            </label>
+          </div>
 
           <div className="grid gap-3 md:grid-cols-3">
             <input className="input" placeholder="URL do logo" value={form.logo_url} onChange={(e) => setForm((v) => ({ ...v, logo_url: e.target.value }))} />
@@ -446,6 +486,16 @@ export function QuoteModelsPage() {
             <input type="checkbox" checked={form.show_summary} onChange={(e) => setForm((v) => ({ ...v, show_summary: e.target.checked }))} />
             Exibir bloco "Resumo do orçamento"
           </label>
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" checked={form.show_recipient} onChange={(e) => setForm((v) => ({ ...v, show_recipient: e.target.checked }))} />
+            Incluir bloco "Destinatário"
+          </label>
+          <textarea
+            className="input min-h-[84px]"
+            placeholder={'Conteudo do destinatario (exemplo):\nContato: {{cliente}}\nEmpresa: {{empresa}}'}
+            value={form.recipient_template}
+            onChange={(e) => setForm((v) => ({ ...v, recipient_template: e.target.value }))}
+          />
           <label className="flex items-center gap-2 text-sm font-semibold">
             <input type="checkbox" checked={form.show_additional_info} onChange={(e) => setForm((v) => ({ ...v, show_additional_info: e.target.checked }))} />
             Exibir bloco "Informações adicionais"

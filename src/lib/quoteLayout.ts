@@ -46,6 +46,9 @@ export interface QuoteLayoutConfig {
   table_line_width: number;
   show_summary: boolean;
   show_additional_info: boolean;
+  show_recipient: boolean;
+  recipient_template: string;
+  justify_all: boolean;
   show_commercial_terms: boolean;
   visible_fields: QuoteFieldKey[];
 }
@@ -91,6 +94,9 @@ export const DEFAULT_QUOTE_LAYOUT: QuoteLayoutConfig = {
   table_line_width: 0.8,
   show_summary: true,
   show_additional_info: true,
+  show_recipient: true,
+  recipient_template: 'Contato: {{cliente}}\nEmpresa: {{empresa}}',
+  justify_all: false,
   show_commercial_terms: true,
   visible_fields: ['cliente', 'empresa', 'produto', 'valor', 'valor_extenso', 'forma_pagamento', 'data', 'status'],
 };
@@ -185,6 +191,13 @@ export function getModelLayoutConfig(model: QuoteModel | null): QuoteLayoutConfi
       typeof layout.show_additional_info === 'boolean'
         ? layout.show_additional_info
         : DEFAULT_QUOTE_LAYOUT.show_additional_info,
+    show_recipient:
+      typeof layout.show_recipient === 'boolean' ? layout.show_recipient : DEFAULT_QUOTE_LAYOUT.show_recipient,
+    recipient_template:
+      typeof layout.recipient_template === 'string'
+        ? layout.recipient_template
+        : DEFAULT_QUOTE_LAYOUT.recipient_template,
+    justify_all: typeof layout.justify_all === 'boolean' ? layout.justify_all : DEFAULT_QUOTE_LAYOUT.justify_all,
     show_commercial_terms:
       typeof layout.show_commercial_terms === 'boolean'
         ? layout.show_commercial_terms
@@ -265,6 +278,9 @@ export function getLayoutOverrides(params: Record<string, unknown> | null): Part
     show_summary: typeof raw.show_summary === 'boolean' ? raw.show_summary : undefined,
     show_additional_info:
       typeof raw.show_additional_info === 'boolean' ? raw.show_additional_info : undefined,
+    show_recipient: typeof raw.show_recipient === 'boolean' ? raw.show_recipient : undefined,
+    recipient_template: typeof raw.recipient_template === 'string' ? raw.recipient_template : undefined,
+    justify_all: typeof raw.justify_all === 'boolean' ? raw.justify_all : undefined,
     show_commercial_terms:
       typeof raw.show_commercial_terms === 'boolean' ? raw.show_commercial_terms : undefined,
     visible_fields: normalizeVisibleFields(raw.visible_fields),
@@ -380,18 +396,34 @@ export function currencyToWordsPtBr(value: number | null | undefined): string {
 export interface TemplateBlock {
   type: 'title' | 'subtitle' | 'bullet' | 'paragraph' | 'spacer';
   text: string;
+  justified: boolean;
 }
 
-export function parseTemplateBlocks(content: string): TemplateBlock[] {
+export function parseTemplateBlocks(content: string, justifyAll = false): TemplateBlock[] {
   const lines = content.split(/\r?\n/);
-  return lines.map((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) return { type: 'spacer' as const, text: '' };
-    if (trimmed.startsWith('# ')) return { type: 'title' as const, text: trimmed.slice(2).trim() };
-    if (trimmed.startsWith('## ')) return { type: 'subtitle' as const, text: trimmed.slice(3).trim() };
-    if (trimmed.startsWith('- ')) return { type: 'bullet' as const, text: trimmed.slice(2).trim() };
-    return { type: 'paragraph' as const, text: trimmed };
+  const out: TemplateBlock[] = [];
+  let inJustifyBlock = false;
+  lines.forEach((line) => {
+    const hasStart = line.includes('{{just}}');
+    const hasEnd = line.includes('{{/just}}');
+    const cleanLine = line.replace(/\{\{just\}\}/g, '').replace(/\{\{\/just\}\}/g, '');
+    const trimmed = cleanLine.trim();
+    const justified = justifyAll || inJustifyBlock || hasStart || hasEnd;
+    if (!trimmed) {
+      out.push({ type: 'spacer' as const, text: '', justified: false });
+    } else if (trimmed.startsWith('# ')) {
+      out.push({ type: 'title' as const, text: trimmed.slice(2).trim(), justified: false });
+    } else if (trimmed.startsWith('## ')) {
+      out.push({ type: 'subtitle' as const, text: trimmed.slice(3).trim(), justified: false });
+    } else if (trimmed.startsWith('- ')) {
+      out.push({ type: 'bullet' as const, text: trimmed.slice(2).trim(), justified });
+    } else {
+      out.push({ type: 'paragraph' as const, text: trimmed, justified });
+    }
+    if (hasStart && !hasEnd) inJustifyBlock = true;
+    if (hasEnd) inJustifyBlock = false;
   });
+  return out;
 }
 
 function normalizeInlineText(value: string): string {

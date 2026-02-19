@@ -33,12 +33,12 @@ interface NavItem {
 const nav: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
   { to: '/contacts', label: 'Contatos', icon: <Users size={16} /> },
-  { to: '/users', label: 'Usuarios', icon: <UserCircle2 size={16} />, adminOnly: true },
+  { to: '/users', label: 'Usuários', icon: <UserCircle2 size={16} />, adminOnly: true },
   { to: '/groups', label: 'Grupos', icon: <Users2 size={16} /> },
   { to: '/products', label: 'Produtos', icon: <Briefcase size={16} /> },
   { to: '/quote-models', label: 'Modelos', icon: <FileText size={16} /> },
-  { to: '/quotes', label: 'Orcamentos', icon: <WalletCards size={16} /> },
-  { to: '/presentations', label: 'Apresentacoes', icon: <BookOpenText size={16} /> },
+  { to: '/quotes', label: 'Orçamentos', icon: <WalletCards size={16} /> },
+  { to: '/presentations', label: 'Apresentações', icon: <BookOpenText size={16} /> },
   { to: '/pipeline', label: 'Pipeline', icon: <ClipboardList size={16} /> },
   { to: '/agenda', label: 'Agenda', icon: <ListChecks size={16} /> },
   { to: '/messages', label: 'Mensagens', icon: <MessageSquare size={16} /> },
@@ -113,7 +113,7 @@ export function Layout({
             </button>
             {!collapsed ? (
               <div className="mt-3 rounded-xl border bg-bg px-3 py-2 text-[11px] leading-4 opacity-75">
-                <p>Versao: {BUILD_VERSION}</p>
+                <p>Versão: {BUILD_VERSION}</p>
                 <p>Build: {BUILD_NUMBER}</p>
               </div>
             ) : null}
@@ -136,7 +136,7 @@ export function Layout({
             <button className="btn-secondary md:hidden" type="button" onClick={() => setMobileOpen(true)}>
               <Menu size={16} /> Menu
             </button>
-            <div className="hidden md:block text-sm opacity-70">Operacao Comercial</div>
+            <div className="hidden md:block text-sm opacity-70">Operação Comercial</div>
             <div className="flex items-center gap-2">
               <Link className="btn-secondary" to="/messages">
                 <Bell size={16} /> Alertas
