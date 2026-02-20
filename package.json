@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "preview": "vite preview --host 0.0.0.0 --port ${PORT:-4173}",
+    "start": "vite preview --host 0.0.0.0 --port ${PORT:-4173}",
     "lint": "eslint src --ext .ts,.tsx",
     "release:build": "node scripts/release-build.mjs"
   },

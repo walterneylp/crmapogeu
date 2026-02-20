@@ -57,6 +57,14 @@ VITE_SUPABASE_ANON_KEY=...
 npm run dev
 ```
 
+## Deploy no Coolify (Node/Vite)
+- Build command: `npm ci && npm run build`
+- Start command: `npm run start`
+- Porta exposta: `4173` (ou defina `PORT` no Coolify, o script respeita esse valor)
+- Publish directory (se usar static deploy): `dist`
+
+Se aparecer `no available server`, normalmente o container nao subiu ou nao estava escutando na porta esperada.
+
 ## Versionamento e compilacao
 - O menu lateral mostra versao e build (ex.: `1.0.124-17.02.2026-12.06.28`).
 - A cada compilacao versionada, execute:
