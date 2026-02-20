@@ -57,13 +57,13 @@ VITE_SUPABASE_ANON_KEY=...
 npm run dev
 ```
 
-## Deploy no Coolify (Node/Vite)
-- Build command: `npm ci && npm run build`
-- Start command: `npm run start`
-- Porta exposta: `4173` (ou defina `PORT` no Coolify, o script respeita esse valor)
-- Publish directory (se usar static deploy): `dist`
+## Deploy no Coolify (recomendado: Dockerfile)
+- Build pack: `Dockerfile`
+- Porta exposta no serviço: `80`
+- Nao precisa definir Start Command manual no Coolify.
+- O container publica frontend estatico com Nginx e fallback SPA para rotas (`/login`, etc.).
 
-Se aparecer `no available server`, normalmente o container nao subiu ou nao estava escutando na porta esperada.
+Se aparecer `no available server`, o problema costuma ser porta interna incorreta no Coolify ou deploy ainda apontando para build pack diferente de Dockerfile.
 
 ## Versionamento e compilacao
 - O menu lateral mostra versao e build (ex.: `1.0.124-17.02.2026-12.06.28`).
